@@ -4,14 +4,19 @@
 import argparse
 import os
 import sys
-from Generator import NpcGenerator
 from dotenv import load_dotenv
+
 load_dotenv()
+
+from Generator import NpcGenerator
+
 
 def validate_api_token():
     token = os.getenv("APITOKEN")
-    if not token or len(token) < 30:
-        sys.exit("❌ Error: API token is missing or looks invalid. Make sure APITOKEN=<token> is set in your .env file.")
+    if not token:
+        sys.exit("❌ Error: API token is missing. Make sure APITOKEN=<token> is set in your .env file.")
+    token = token.strip('"').strip("'")
+    os.environ["APITOKEN"] = token
     return token
 
 
@@ -23,12 +28,17 @@ def select_campaign(generator):
     print("\nAvailable campaigns:")
     for idx, campaign in enumerate(campaigns):
         print(f"  [{idx}] {campaign['name']} (ID: {campaign['id']})")
+    print("  [x] Exit")
 
     while True:
+        choice = input("\nEnter the number of the campaign to use (or 'x' to cancel): ").strip().lower()
+        if choice == 'x':
+            print("Exiting.")
+            sys.exit(0)
         try:
-            choice = int(input("\nEnter the number of the campaign to use: "))
-            if 0 <= choice < len(campaigns):
-                return campaigns[choice]['name']
+            index = int(choice)
+            if 0 <= index < len(campaigns):
+                return campaigns[index]['name']
         except ValueError:
             pass
         print("Invalid choice. Try again.")
@@ -42,17 +52,20 @@ def main():
 
     args = parser.parse_args()
 
-    # Set host override if provided
+    # Normalize host input if provided
     if args.host:
-        os.environ["API_URL"] = args.host
+        host = args.host.strip()
+        if not host.startswith("http://") and not host.startswith("https://"):
+            host = "https://" + host
+        if not host.endswith("/api/1.0/"):
+            host = host.rstrip("/") + "/api/1.0/"
+        os.environ["API_URL"] = host
 
     validate_api_token()
     generator = NpcGenerator()
 
-    # Determine campaign name
     campaign_name = args.campaign or select_campaign(generator)
 
-    # Determine NPC count
     count = args.count
     if count is None:
         try:
