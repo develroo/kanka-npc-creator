@@ -46,7 +46,7 @@ def select_campaign(generator):
 
 def main():
     parser = argparse.ArgumentParser(description="Generate random NPCs in a Kanka campaign.")
-    parser.add_argument("--host", help="Set API base URL (e.g., https://kanka.example.com/api/1.0/)")
+    parser.add_argument("--host", help="Set API base DOMAINNAME (e.g., kanka.example.com)")
     parser.add_argument("--campaign", help="Specify campaign name directly")
     parser.add_argument("--count", type=int, help="Number of NPCs to generate", default=None)
 
